@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::hash::Hash;
+use std::hash::{BuildHasher, Hash};
 
 pub trait GroupBy: IntoIterator + Sized {
     fn group_by<F, K>(self, mut derive_key: F) -> HashMap<K, Vec<Self::Item>>
@@ -8,6 +8,25 @@ pub trait GroupBy: IntoIterator + Sized {
         K: Eq + Hash,
     {
         let mut map = HashMap::new();
+        self.into_iter().for_each(|item| {
+            map.entry(derive_key(&item))
+                .or_insert_with(Vec::new)
+                .push(item)
+        });
+        map
+    }
+
+    fn group_by_with_hasher<F, K, S>(
+        self,
+        mut derive_key: F,
+        hash_builder: S,
+    ) -> HashMap<K, Vec<Self::Item>, S>
+    where
+        F: FnMut(&Self::Item) -> K,
+        K: Eq + Hash,
+        S: BuildHasher,
+    {
+        let mut map = HashMap::with_hasher(hash_builder);
         self.into_iter().for_each(|item| {
             map.entry(derive_key(&item))
                 .or_insert_with(Vec::new)
