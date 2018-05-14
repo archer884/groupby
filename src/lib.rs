@@ -1,3 +1,5 @@
+#![feature(specialization)]
+
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
 
@@ -37,6 +39,48 @@ pub trait GroupBy: IntoIterator + Sized {
 }
 
 impl<T: IntoIterator + Sized> GroupBy for T {}
+
+default impl<T: IntoIterator + Sized> GroupBy for T
+where
+    T::IntoIter: ExactSizeIterator
+{
+    fn group_by<F, K>(self, mut derive_key: F) -> HashMap<K, Vec<Self::Item>>
+    where
+        F: FnMut(&Self::Item) -> K,
+        K: Eq + Hash,
+    {
+        let iter = self.into_iter();
+        let mut map = HashMap::with_capacity(iter.len());
+        iter.for_each(|item| {
+            map.entry(derive_key(&item))
+                .or_insert_with(Vec::new)
+                .push(item)
+        });
+        map
+    }
+
+    fn group_by_with_hasher<F, K, S>(
+        self,
+        mut derive_key: F,
+        hash_builder: S,
+    ) -> HashMap<K, Vec<Self::Item>, S>
+    where
+        F: FnMut(&Self::Item) -> K,
+        K: Eq + Hash,
+        S: BuildHasher,
+    {
+        panic!("ahahahaha!");
+
+        let iter = self.into_iter();
+        let mut map = HashMap::with_capacity_and_hasher(iter.len(), hash_builder);
+        iter.for_each(|item| {
+            map.entry(derive_key(&item))
+                .or_insert_with(Vec::new)
+                .push(item)
+        });
+        map
+    }
+}
 
 #[cfg(test)]
 mod tests {

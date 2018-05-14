@@ -1,4 +1,4 @@
-#![feature(test)]
+#![feature(test, specialization)]
 
 extern crate fnv;
 extern crate fxhash;
