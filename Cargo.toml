@@ -6,6 +6,11 @@ authors = ["J/A <archer884@gmail.com>"]
 [dependencies]
 
 [dev-dependencies]
+criterion = "*"
 fnv = "*"
 fxhash = "*"
 metrohash = "*"
+
+[[bench]]
+name = "hash_performance"
+harness = false
